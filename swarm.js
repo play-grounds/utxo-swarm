@@ -22,7 +22,8 @@ function draw() {
   const total = torrent.downloaded || 1;
   $('src').innerHTML = [['<b>peers (WebRTC)</b>', '', peerBytes, 0], ['<b>web seed (HTTP)</b>', '', seedBytes, 0], ...rows].map(([k, who, b, r]) => `<tr><td>${k} <span class="mono tiny mut">${who}</span></td><td class="n">${mb(b)}</td><td class="n">${((b / total) * 100).toFixed(1)}%</td><td class="n">${r ? rate(r) : ''}</td></tr>`).join('');
   $('bar').value = torrent.progress; $('peers').textContent = torrent.numPeers; $('up').textContent = mb(torrent.uploaded); $('elapsed').textContent = (((doneAt || Date.now()) - t0) / 1000).toFixed(0) + ' s';
-  $('state').textContent = torrent.done ? `done: ${mb(torrent.downloaded)} in ${((doneAt - t0) / 1000).toFixed(1)} s · seeding, ${mb(torrent.uploaded)} served to ${torrent.numPeers} peer(s)` : `${(torrent.progress * 100).toFixed(1)}% · ${rate(torrent.downloadSpeed)} · ${torrent.numPeers} peer(s)`;
+  const received = peerBytes + seedBytes; // what actually crossed the network; the rest came from this browser's storage
+  $('state').textContent = torrent.done ? (received < torrent.length / 2 ? `done in ${((doneAt - t0) / 1000).toFixed(1)} s: ${mb(torrent.length - received)} was already in this browser's storage from an earlier run (clear it to measure again) · seeding, ${mb(torrent.uploaded)} served to ${torrent.numPeers} peer(s)` : `done: ${mb(received)} from the swarm in ${((doneAt - t0) / 1000).toFixed(1)} s · seeding, ${mb(torrent.uploaded)} served to ${torrent.numPeers} peer(s)`) : `${(torrent.progress * 100).toFixed(1)}% · ${rate(torrent.downloadSpeed)} · ${torrent.numPeers} peer(s)`;
 }
 async function verify() {
   $('verify').textContent = 'hashing…';
@@ -47,6 +48,18 @@ $('go').onclick = async () => {
   timer = setInterval(draw, 1000);
 };
 $('stop').onclick = () => { clearInterval(timer); client?.destroy(); client = null; torrent = null; $('state').textContent = 'stopped'; $('go').disabled = false; $('stop').disabled = true; };
+// the stored copy lives in this browser's origin storage (OPFS, webtorrent's own store) and survives reloads: that is the
+// seeding-across-reloads the goal needs, and it is also why a second run finishes in a second; clear it to measure again
+$('clear').onclick = async () => {
+  clearInterval(timer); $('clear').disabled = true;
+  try {
+    const c = client ?? new WebTorrent({ tracker: { announce: [] } }); const meta = new Uint8Array(await (await fetch('utxo-knots-150307.torrent')).arrayBuffer());
+    const t = torrent ?? await new Promise((res) => c.add(meta, { announce: [] }, res));
+    await new Promise((res) => c.remove(t, { destroyStore: true }, res)); if (!client) c.destroy(); client = null; torrent = null;
+    $('state').textContent = 'stored copy cleared'; $('go').disabled = false; $('stop').disabled = true; log('stored copy cleared');
+  } catch (e) { $('state').textContent = 'could not clear: ' + e.message; }
+  $('clear').disabled = false;
+};
 
 // plain HTTP, the same file, for the comparison
 $('http').onclick = async () => {

@@ -19,7 +19,7 @@ The torrent's metadata is in the repo (`utxo-knots-150307.torrent`), so a browse
 
 ## The page
 
-`index.html` + `swarm.js`: trackers and web seed as inputs (query string `?tracker=…&webseed=…`), **Fetch from the swarm** with every byte attributed to the wire it came from (WebRTC peer or web seed), rate, peers, uploaded while seeding, the SHA-256 check; **Fetch by HTTP** of the web seed for the comparison. webtorrent 3.0.21 from the CDN, pinned. The file is held in memory in this first version: a desktop browser, not a phone. Storing in OPFS and seeding across reloads is the next step.
+`index.html` + `swarm.js`: trackers and web seed as inputs (query string `?tracker=…&webseed=…`), **Fetch from the swarm** with every byte attributed to the wire it came from (WebRTC peer or web seed), rate, peers, uploaded while seeding, the SHA-256 check; **Fetch by HTTP** of the web seed for the comparison. webtorrent 3.0.21 from the CDN, pinned. webtorrent stores the pieces in the browser's origin storage (OPFS) by default, so the copy survives reloads and the tab seeds at once on the next visit; **Clear the stored copy** deletes it to measure the swarm again.
 
 ## The seeder
 
@@ -28,6 +28,6 @@ The torrent's metadata is in the repo (`utxo-knots-150307.torrent`), so a browse
 
 Logs each peer and the running total uploaded. Run it anywhere the file is; several are better than one.
 
-Not done, by design, until the page shows the numbers: a tracker of our own (two of the three public WebSocket trackers were flaky or dead when checked), a second web seed, OPFS storage, and any change to the apps.
+Not done, by design, until the page shows the numbers: a tracker of our own (two of the three public WebSocket trackers were flaky or dead when checked), a second web seed, and any change to the apps.
 
 AGPL-3.0-or-later.

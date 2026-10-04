@@ -33,11 +33,11 @@
 
 <div class="card">
   <h2 style="margin-top:0">From the swarm</h2>
-  <div class="row"><button id="go" class="p" type="button">Fetch from the swarm</button><button id="stop" type="button" disabled>Stop</button><span id="state" class="mut">idle</span></div>
+  <div class="row"><button id="go" class="p" type="button">Fetch from the swarm</button><button id="stop" type="button" disabled>Stop</button><button id="clear" type="button" title="Delete the copy webtorrent keeps in this browser's storage, to fetch from the swarm again">Clear the stored copy</button><span id="state" class="mut">idle</span></div>
   <progress id="bar" value="0" max="1"></progress>
   <table><thead><tr><th>Source</th><th class="n">Bytes</th><th class="n">Share</th><th class="n">Rate</th></tr></thead><tbody id="src"></tbody></table>
   <div class="row tiny"><span>Peers now: <b id="peers">0</b></span><span>Uploaded (seeding): <b id="up">0</b></span><span>Elapsed: <b id="elapsed">0 s</b></span><span>Verify: <b id="verify">—</b></span></div>
-  <div class="tiny mut">Pieces are checked by their SHA-1 as they arrive (the torrent's own rule); at the end the whole file's SHA-256 is checked against the snapshot's known hash. The file is held in memory in this first version (870 MB: a desktop browser, not a phone).</div>
+  <div class="tiny mut">Pieces are checked by their SHA-1 as they arrive (the torrent's own rule); at the end the whole file's SHA-256 is checked against the snapshot's known hash. webtorrent keeps the pieces in this browser's origin storage (OPFS), so a reload seeds at once instead of fetching again — which is the goal, and also why a second run is "done" in a second: clear the stored copy to measure the swarm again.</div>
 </div>
 
 <div class="card">
