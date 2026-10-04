@@ -12,7 +12,7 @@ $('webseed').value = q.get('webseed') ?? '';
 const trackers = () => $('trackers').value.split(',').map((s) => s.trim()).filter(Boolean);
 const webseed = () => $('webseed').value.trim();
 
-let client = null, torrent = null, t0 = 0, timer = null;
+let client = null, torrent = null, t0 = 0, doneAt = 0, timer = null;
 // bytes by source: a wire's own count dies with the wire (peers come and go), so what a closed wire brought is kept here
 const closed = { peer: 0, 'web seed': 0 }; const kindOf = (w) => (w.type === 'webSeed' ? 'web seed' : 'peer');
 function draw() {
@@ -21,8 +21,8 @@ function draw() {
   for (const w of torrent.wires) { const kind = kindOf(w); const b = w.downloaded; if (kind === 'peer') peerBytes += b; else seedBytes += b; rows.push([kind, w.remoteAddress ?? (w.type === 'webSeed' ? webseed() : w.peerId?.slice(0, 12) ?? '?'), b, w.downloadSpeed()]); }
   const total = torrent.downloaded || 1;
   $('src').innerHTML = [['<b>peers (WebRTC)</b>', '', peerBytes, 0], ['<b>web seed (HTTP)</b>', '', seedBytes, 0], ...rows].map(([k, who, b, r]) => `<tr><td>${k} <span class="mono tiny mut">${who}</span></td><td class="n">${mb(b)}</td><td class="n">${((b / total) * 100).toFixed(1)}%</td><td class="n">${r ? rate(r) : ''}</td></tr>`).join('');
-  $('bar').value = torrent.progress; $('peers').textContent = torrent.numPeers; $('up').textContent = mb(torrent.uploaded); $('elapsed').textContent = ((Date.now() - t0) / 1000).toFixed(0) + ' s';
-  $('state').textContent = torrent.done ? `done: ${mb(torrent.downloaded)} in ${((Date.now() - t0) / 1000).toFixed(1)} s, seeding` : `${(torrent.progress * 100).toFixed(1)}% · ${rate(torrent.downloadSpeed)} · ${torrent.numPeers} peer(s)`;
+  $('bar').value = torrent.progress; $('peers').textContent = torrent.numPeers; $('up').textContent = mb(torrent.uploaded); $('elapsed').textContent = (((doneAt || Date.now()) - t0) / 1000).toFixed(0) + ' s';
+  $('state').textContent = torrent.done ? `done: ${mb(torrent.downloaded)} in ${((doneAt - t0) / 1000).toFixed(1)} s · seeding, ${mb(torrent.uploaded)} served to ${torrent.numPeers} peer(s)` : `${(torrent.progress * 100).toFixed(1)}% · ${rate(torrent.downloadSpeed)} · ${torrent.numPeers} peer(s)`;
 }
 async function verify() {
   $('verify').textContent = 'hashing…';
@@ -33,7 +33,7 @@ async function verify() {
   } catch (e) { $('verify').innerHTML = `<span class="bad">could not hash: ${e.message}</span>`; log('verify error ' + e.message); }
 }
 $('go').onclick = async () => {
-  $('go').disabled = true; $('stop').disabled = false; $('state').textContent = 'starting…'; t0 = Date.now();
+  $('go').disabled = true; $('stop').disabled = false; $('state').textContent = 'starting…'; t0 = Date.now(); doneAt = 0;
   client = new WebTorrent({ tracker: { announce: trackers() } });
   client.on('error', (e) => log('client error ' + e.message));
   const meta = await (await fetch('utxo-knots-150307.torrent')).arrayBuffer();
@@ -43,7 +43,7 @@ $('go').onclick = async () => {
   torrent.on('infoHash', () => log('infohash ' + torrent.infoHash + (torrent.infoHash === INFOHASH ? ' (as expected)' : ' (UNEXPECTED)')));
   torrent.on('wire', (w, addr) => { log(`wire ${w.type === 'webSeed' ? 'web seed' : 'peer ' + (addr ?? '')}`); w.once('close', () => { closed[kindOf(w)] += w.downloaded; }); });
   torrent.on('warning', (e) => log('warning ' + e.message)); torrent.on('error', (e) => log('error ' + e.message));
-  torrent.on('done', () => { log(`done ${mb(torrent.downloaded)} in ${((Date.now() - t0) / 1000).toFixed(1)} s`); draw(); verify(); });
+  torrent.on('done', () => { doneAt = Date.now(); log(`done ${mb(torrent.downloaded)} in ${((Date.now() - t0) / 1000).toFixed(1)} s`); draw(); verify(); });
   timer = setInterval(draw, 1000);
 };
 $('stop').onclick = () => { clearInterval(timer); client?.destroy(); client = null; torrent = null; $('state').textContent = 'stopped'; $('go').disabled = false; $('stop').disabled = true; };
