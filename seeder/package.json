@@ -1,0 +1,17 @@
+{
+  "name": "seeder",
+  "version": "1.0.0",
+  "description": "the always-on seeder for the UTXO snapshot swarm",
+  "scripts": {
+    "seed": "node seed.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "dependencies": {
+    "bittorrent-tracker": "^11.2.3",
+    "webtorrent": "^3.0.21"
+  },
+  "private": true
+}

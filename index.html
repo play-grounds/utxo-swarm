@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UTXO swarm</title>
+<meta name="description" content="A playground: fetch the txbt4 UTXO snapshot (870 MB, infohash 242e9b7d…) from a BitTorrent swarm in the browser — peers over WebRTC, a web seed as fallback — and see where every byte came from, next to a plain HTTP fetch. Seeds while the tab is open.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/webtorrent@3.0.21/ https://cdn.jsdelivr.net/gh/bitcoin-desktop/schema@b8cbf6337c7450fe14ddc5bce00c7280059aab5d/; connect-src 'self' https: wss:; worker-src 'self' blob:; img-src 'self' data:; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'">
+<style>
+  :root { --bg: #fbfaf7; --fg: #1e1d1a; --mut: #6b675f; --line: #ddd8cc; --ok: #1c7a3c; --bad: #b3261e; --link: #1f5fa3; --card: #fff; --mono: ui-monospace, Menlo, Consolas, monospace; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #15161a; --fg: #ebe9e2; --mut: #a39f94; --line: #333640; --card: #1d1f25; --link: #7fb0ff; --ok: #5fcf7f; --bad: #ff7a70; } }
+  html { background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, sans-serif; } body { margin: 0; padding: 0 16px 48px; max-width: 900px; margin-inline: auto; }
+  h1 { font-size: 1.5rem; margin: 1.2rem 0 .2rem; } h2 { font-size: 1.05rem; margin: 1.2rem 0 .4rem; } .sub { color: var(--mut); margin: 0 0 1rem; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 10px 0; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0; } label { color: var(--mut); }
+  input { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); min-width: 0; } input.wide { flex: 1 1 22rem; } .mono { font-family: var(--mono); font-size: .9em; }
+  button { font: inherit; padding: 6px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--fg); cursor: pointer; } button.p { background: var(--link); color: #fff; border-color: var(--link); } button:disabled { opacity: .55; cursor: not-allowed; }
+  table { border-collapse: collapse; width: 100%; } th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--line); } td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+  .mut { color: var(--mut); } .ok { color: var(--ok); } .bad { color: var(--bad); } .tiny { font-size: .85em; } .wrap { overflow-wrap: anywhere; }
+  progress { width: 100%; height: 10px; } #log { font-family: var(--mono); font-size: .8em; white-space: pre-wrap; max-height: 16rem; overflow: auto; color: var(--mut); }
+</style>
+</head>
+<body>
+<h1>UTXO swarm</h1>
+<p class="sub">The txbt4 UTXO snapshot — 869,836,053 bytes, 208 pieces of 4 MiB, infohash <span class="mono">242e9b7d…87c0</span> — fetched in this tab from a BitTorrent swarm (peers over WebRTC, a web seed as fallback), verified, and seeded while the tab stays open. Next to it, the same file by plain HTTP, for the number that matters. A playground: nothing else depends on it. <a href="https://github.com/play-grounds/utxo-swarm">source</a></p>
+
+<div class="card">
+  <h2 style="margin-top:0">Sources</h2>
+  <div class="row"><label for="trackers">Trackers (wss, comma-separated):</label><input id="trackers" class="mono wide" spellcheck="false"></div>
+  <div class="row"><label for="webseed">Web seed (a plain URL of the file, optional; <span class="mono">?webseed=</span>):</label><input id="webseed" class="mono wide" placeholder="https://…/utxo-knots-150307.dat" spellcheck="false"></div>
+  <div class="tiny mut">The torrent's metadata is in this repo (<a href="utxo-knots-150307.torrent">utxo-knots-150307.torrent</a>), so no peer is needed to learn the pieces. Trackers and the web seed are outside the infohash: pass your own in the address, nothing is hard-wired to a host.</div>
+</div>
+
+<div class="card">
+  <h2 style="margin-top:0">From the swarm</h2>
+  <div class="row"><button id="go" class="p" type="button">Fetch from the swarm</button><button id="stop" type="button" disabled>Stop</button><span id="state" class="mut">idle</span></div>
+  <progress id="bar" value="0" max="1"></progress>
+  <table><thead><tr><th>Source</th><th class="n">Bytes</th><th class="n">Share</th><th class="n">Rate</th></tr></thead><tbody id="src"></tbody></table>
+  <div class="row tiny"><span>Peers now: <b id="peers">0</b></span><span>Uploaded (seeding): <b id="up">0</b></span><span>Elapsed: <b id="elapsed">0 s</b></span><span>Verify: <b id="verify">—</b></span></div>
+  <div class="tiny mut">Pieces are checked by their SHA-1 as they arrive (the torrent's own rule); at the end the whole file's SHA-256 is checked against the snapshot's known hash. The file is held in memory in this first version (870 MB: a desktop browser, not a phone).</div>
+</div>
+
+<div class="card">
+  <h2 style="margin-top:0">By plain HTTP, for comparison</h2>
+  <div class="row"><button id="http" type="button">Fetch the web seed by HTTP</button><span id="hstate" class="mut">needs a web seed URL</span></div>
+  <progress id="hbar" value="0" max="1"></progress>
+</div>
+
+<details class="card"><summary>Log</summary><div id="log"></div></details>
+<p class="tiny mut">webtorrent 2.8.5 from the CDN, pinned. AGPL-3.0-or-later.</p>
+<script type="module" src="swarm.js"></script>
+</body>
+</html>
