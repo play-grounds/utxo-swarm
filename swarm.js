@@ -73,3 +73,19 @@ $('http').onclick = async () => {
   $('http').disabled = false;
 };
 if (webseed()) $('hstate').textContent = 'ready';
+
+// ---- the swarm's state, as the trackers tell it: an announce as a leecher that wants no peers, answered with the counts
+const bin = (hex) => String.fromCharCode(...hex.match(/../g).map((x) => parseInt(x, 16)));
+const askTracker = (url) => new Promise((resolve) => {
+  const t0 = Date.now(); let ws; const done = (r) => { try { ws.close(); } catch {} resolve({ url, ms: Date.now() - t0, ...r }); };
+  const timer = setTimeout(() => done({ error: 'no answer in 8 s' }), 8000);
+  try { ws = new WebSocket(url); } catch (e) { clearTimeout(timer); return done({ error: e.message }); }
+  ws.onopen = () => ws.send(JSON.stringify({ action: 'announce', info_hash: bin(INFOHASH), peer_id: '-UX0001-' + Math.random().toString(36).slice(2, 14).padEnd(12, '0'), numwant: 0, uploaded: 0, downloaded: 0, left: BYTES, event: 'started', offers: [] }));
+  ws.onmessage = (m) => { let d; try { d = JSON.parse(m.data); } catch { return; } if (d.complete != null || d.incomplete != null) { clearTimeout(timer); done({ seeders: d.complete ?? 0, leechers: d.incomplete ?? 0 }); } else if (d['failure reason']) { clearTimeout(timer); done({ error: d['failure reason'] }); } };
+  ws.onerror = () => { clearTimeout(timer); done({ error: 'refused' }); };
+});
+async function swarmState() {
+  const rows = await Promise.all(trackers().map(askTracker));
+  $('trk').innerHTML = rows.map((r) => `<tr><td class="mono tiny wrap">${r.url.replace('wss://', '')}</td>${r.error ? `<td colspan="2" class="bad tiny">${r.error}</td>` : `<td class="n">${r.seeders}</td><td class="n">${r.leechers}</td>`}<td class="tiny mut">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · ${r.ms} ms</td></tr>`).join('');
+}
+swarmState(); setInterval(swarmState, 60000); $('trackers').addEventListener('change', swarmState);

@@ -32,6 +32,12 @@
 </div>
 
 <div class="card">
+  <h2 style="margin-top:0">Swarm state</h2>
+  <table><thead><tr><th>Tracker</th><th class="n">Seeders</th><th class="n">Leechers</th><th>Asked</th></tr></thead><tbody id="trk"><tr><td class="mut" colspan="4">asking…</td></tr></tbody></table>
+  <div class="tiny mut">What each tracker answers for the infohash, asked every minute. The same seeder is usually on several trackers, so the counts overlap; a browser asking counts itself as a leecher. Peers this page meets when it fetches are listed above.</div>
+</div>
+
+<div class="card">
   <h2 style="margin-top:0">From the swarm</h2>
   <div class="row"><button id="go" class="p" type="button">Fetch from the swarm</button><button id="stop" type="button" disabled>Stop</button><button id="clear" type="button" title="Delete the copy webtorrent keeps in this browser's storage, to fetch from the swarm again">Clear the stored copy</button><span id="state" class="mut">idle</span></div>
   <progress id="bar" value="0" max="1"></progress>

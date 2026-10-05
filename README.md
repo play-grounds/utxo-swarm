@@ -13,6 +13,8 @@ One infohash, every kind of peer, each making the others stronger:
 - **Web seeds** (BEP 19): plain HTTP mirrors of the file, inside the magnet rather than the infohash, so a swarm of zero still works. Passed as `?webseed=` here; none is hard-wired.
 - **Browser peers**: this page, and later every synced tab, fetch over WebRTC and seed while open.
 
+The page also shows the swarm's state as the trackers tell it: seeders and leechers per tracker, asked every minute. Overlapping counts (one seeder is on several trackers), a browser asking counts as a leecher, nothing self-reported, nothing new on the wire.
+
     magnet:?xt=urn:btih:242e9b7dcba15cc0ed8f1bc5f06b68da008f87c0&dn=utxo-knots-150307.dat&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.dev&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce
 
 The torrent's metadata is in the repo (`utxo-knots-150307.torrent`), so a browser needs no peer to learn the pieces. Pieces are checked by SHA-1 as they arrive; the whole file's SHA-256 (`86118db3…29cd`, the snapshot's known hash) is checked at the end.
