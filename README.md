@@ -28,7 +28,7 @@ The torrent's metadata is in the repo (`utxo-knots-150307.torrent`), so a browse
     cd seeder && npm install
     node seed.mjs <file> --announce wss://tracker.openwebtorrent.com --announce wss://tracker.webtorrent.dev --announce udp://tracker.opentrackr.org:1337/announce [--webseed https://…] [--every 60]
 
-Logs each peer and the running total uploaded. Run it anywhere the file is; several are better than one. `--add <torrent file>:<directory>` seeds an existing torrent from a directory that already holds its content — the one here also seeds Sintel (the WebTorrent demo film) so that [a peer written from the schema](https://play-grounds.github.io/torrent-schema/apps/peer.html?h=08ada5a7a6183aae1e09d831df6748d566095a10) always has a swarm to fetch a film from.
+Logs each peer and the running total uploaded. Run it anywhere the file is; several are better than one. `--add <torrent file>:<directory>` seeds an existing torrent from a directory that already holds its content — the one here also seeds Sintel (the WebTorrent demo film) so that [a peer written from the schema](https://torrent-schema.github.io/apps/peer.html?h=08ada5a7a6183aae1e09d831df6748d566095a10) always has a swarm to fetch a film from.
 
 Not done, by design, until the page shows the numbers: a tracker of our own (two of the three public WebSocket trackers were flaky or dead when checked), a second web seed, and any change to the apps.
 
