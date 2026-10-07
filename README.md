@@ -10,12 +10,12 @@ One infohash, every kind of peer, each making the others stronger:
 
 - **Desktop clients** (qBittorrent, Transmission, anything): add the magnet below, seed. This is where the node count comes from.
 - **The seeder** (`seeder/seed.mjs`): webtorrent 3 in Node, which speaks TCP/uTP and DHT to desktop clients *and* WebRTC to browsers through the WebSocket trackers. Without one of these a browser finds no peer at all. One runs now.
-- **Web seeds** (BEP 19): plain HTTP mirrors of the file, inside the magnet rather than the infohash, so a swarm of zero still works. Passed as `?webseed=` here; none is hard-wired.
+- **Web seeds** (BEP 19): plain HTTP mirrors of the file, inside the torrent file and the magnet rather than the infohash, so a swarm of zero still works. One exists: an R2 bucket, `https://pub-8cae8bad22cf4f44b22188af9b1c0064.r2.dev/utxo-knots-150307.dat` (public, CORS open, range requests), carried as `url-list` in the torrent file since 7 Oct 2026. `?webseed=` on the page replaces it.
 - **Browser peers**: this page, and later every synced tab, fetch over WebRTC and seed while open.
 
 The page also shows the swarm's state as the trackers tell it: seeders and leechers per tracker, asked every minute. Overlapping counts (one seeder is on several trackers), a browser asking counts as a leecher, nothing self-reported, nothing new on the wire.
 
-    magnet:?xt=urn:btih:242e9b7dcba15cc0ed8f1bc5f06b68da008f87c0&dn=utxo-knots-150307.dat&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.dev&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce
+    magnet:?xt=urn:btih:242e9b7dcba15cc0ed8f1bc5f06b68da008f87c0&dn=utxo-knots-150307.dat&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.dev&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&ws=https%3A%2F%2Fpub-8cae8bad22cf4f44b22188af9b1c0064.r2.dev%2Futxo-knots-150307.dat
 
 The torrent's metadata is in the repo (`utxo-knots-150307.torrent`), so a browser needs no peer to learn the pieces. Pieces are checked by SHA-1 as they arrive; the whole file's SHA-256 (`86118db3…29cd`, the snapshot's known hash) is checked at the end.
 

@@ -28,7 +28,7 @@
   <h2 style="margin-top:0">Sources</h2>
   <div class="row"><label for="trackers">Trackers (wss, comma-separated):</label><input id="trackers" class="mono wide" spellcheck="false"></div>
   <div class="row"><label for="webseed">Web seed (a plain URL of the file, optional; <span class="mono">?webseed=</span>):</label><input id="webseed" class="mono wide" placeholder="https://…/utxo-knots-150307.dat" spellcheck="false"></div>
-  <div class="tiny mut">The torrent's metadata is in this repo (<a href="utxo-knots-150307.torrent">utxo-knots-150307.torrent</a>), so no peer is needed to learn the pieces. Trackers and the web seed are outside the infohash: pass your own in the address, nothing is hard-wired to a host.</div>
+  <div class="tiny mut">The torrent's metadata is in this repo (<a href="utxo-knots-150307.torrent">utxo-knots-150307.torrent</a>), so no peer is needed to learn the pieces. Trackers and the web seed are outside the infohash; the torrent file carries one web seed (an R2 bucket, <span class="mono">url-list</span>), and <span class="mono">?webseed=</span> replaces it. Nothing is hard-wired in the page.</div>
 </div>
 
 <div class="card">

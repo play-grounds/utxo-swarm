@@ -11,6 +11,8 @@ $('trackers').value = q.get('tracker') ? q.getAll('tracker').join(',') : DEFAULT
 $('webseed').value = q.get('webseed') ?? '';
 const trackers = () => $('trackers').value.split(',').map((s) => s.trim()).filter(Boolean);
 const webseed = () => $('webseed').value.trim();
+// the torrent file carries its web seed (BEP 19 url-list, outside the infohash): it is the default unless ?webseed= says otherwise
+const torrentWebseeds = async () => { const b = new Uint8Array(await (await fetch('utxo-knots-150307.torrent')).arrayBuffer()); const s = new TextDecoder('latin1').decode(b); const m = s.match(/8:url-listl((?:\d+:[^]*?)+?)e(?:e)?$/); if (!m) return []; const out = []; let i = 0, t = m[1]; while (i < t.length) { const c = t.indexOf(':', i); const n = Number(t.slice(i, c)); out.push(t.slice(c + 1, c + 1 + n)); i = c + 1 + n; } return out; };
 
 let client = null, torrent = null, t0 = 0, doneAt = 0, timer = null;
 // bytes by source: a wire's own count dies with the wire (peers come and go), so what a closed wire brought is kept here
@@ -73,6 +75,7 @@ $('http').onclick = async () => {
   $('http').disabled = false;
 };
 if (webseed()) $('hstate').textContent = 'ready';
+torrentWebseeds().then((ws) => { if (ws.length && !webseed()) { $('webseed').value = ws[0]; $('hstate').textContent = 'ready'; log('web seed from the torrent: ' + ws[0]); } }).catch(() => {});
 
 // ---- the swarm's state, as the trackers tell it: an announce as a leecher that wants no peers, answered with the counts
 const bin = (hex) => String.fromCharCode(...hex.match(/../g).map((x) => parseInt(x, 16)));
